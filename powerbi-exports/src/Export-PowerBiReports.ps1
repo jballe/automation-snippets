@@ -1,15 +1,17 @@
 param(
     $Destination = (Resolve-Path .),
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     $BearerToken,
     [Switch]$Grupper,
     [Switch]$Distrikter,
+    [Switch]$Force,
     $GrupperFile = "Grupper.csv",
     $GrupperFileIdField = "GruppeID",
     $GrupperFileNameField = "Gruppe",
     $DistrikterFile = "Distrikter.csv",
     $DistrikterFileNameField = "Distrikt",
-    $ChunkSize = 10,
+    $ChunkSize = 2,
+    $ChunkSleepSeconds = 30,
     $Skip = 0
 )
 
@@ -17,7 +19,6 @@ $ErrorActionPreference = "STOP"
 
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $session.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35"
-
 
 function Export-ReportForDistrikt {
     param (
@@ -59,7 +60,7 @@ function Export-ReportForGruppe {
 
     $activityId = [System.Guid]::NewGuid().ToString("d")
 
-    $result = Invoke-WebRequest -UseBasicParsing -Uri "https://wabi-europe-north-b-redirect.analysis.windows.net/export/reports/d4644347-1a7e-493a-ba7c-01ca397f8b70/asyncexports" `
+    $result = Invoke-WebRequest -UseBasicParsing -Uri "https://wabi-europe-north-b-redirect.analysis.windows.net/export/reports/809fe1e8-afdb-4e1d-b3cb-365669ead635/asyncexports" `
         -Method "POST" `
         -WebSession $session `
         -Headers @{
@@ -72,7 +73,9 @@ function Export-ReportForGruppe {
         "x-powerbi-hostenv"          = "Power BI Web"
     } `
         -ContentType "application/json;charset=UTF-8" `
-        -Body "{`"format`":`"pdf`",`"powerBIReportConfiguration`":{`"settings`":{`"locale`":`"en-US`",`"timeZoneId`":`"Romance Standard Time`",`"excludeHiddenPages`":false},`"payload`":`"{\`"objectId\`":\`"28cd0166-4908-846f-61a3-0597e0e082f4\`",\`"type\`":99,\`"explorationState\`":\`"{\\\`"version\\\`":\\\`"1.0\\\`",\\\`"filters\\\`":{\\\`"byExpr\\\`":[{\\\`"name\\\`":\\\`"Filterd08fa18140bd39d72c69\\\`",\\\`"type\\\`":\\\`"Categorical\\\`",\\\`"filter\\\`":{\\\`"Version\\\`":2,\\\`"From\\\`":[{\\\`"Name\\\`":\\\`"g\\\`",\\\`"Entity\\\`":\\\`"Grupper\\\`",\\\`"Type\\\`":0}],\\\`"Where\\\`":[{\\\`"Condition\\\`":{\\\`"In\\\`":{\\\`"Expressions\\\`":[{\\\`"Column\\\`":{\\\`"Expression\\\`":{\\\`"SourceRef\\\`":{\\\`"Source\\\`":\\\`"g\\\`"}},\\\`"Property\\\`":\\\`"GruppeID\\\`"}}],\\\`"Values\\\`":[[{\\\`"Literal\\\`":{\\\`"Value\\\`":\\\`"${GruppeId}L\\\`"}}]]}}}]},\\\`"expression\\\`":{\\\`"Column\\\`":{\\\`"Expression\\\`":{\\\`"SourceRef\\\`":{\\\`"Entity\\\`":\\\`"Grupper\\\`"}},\\\`"Property\\\`":\\\`"GruppeID\\\`"}},\\\`"howCreated\\\`":1}]},\\\`"sections\\\`":{}}\`"}`"}}"    
+        -Body "{`"format`":`"pdf`",`"powerBIReportConfiguration`":{`"settings`":{`"locale`":`"en-GB`",`"timeZoneId`":`"Romance Standard Time`",`"excludeHiddenPages`":true},`"payload`":`"{\`"objectId\`":\`"9ed11696-e55f-356e-ba4f-3d653eee09c9\`",\`"type\`":99,\`"explorationState\`":\`"{\\\`"version\\\`":\\\`"1.3\\\`",\\\`"filters\\\`":{\\\`"byExpr\\\`":[{\\\`"name\\\`":\\\`"Filter6f25c88c286442d5ce56\\\`",\\\`"type\\\`":\\\`"Categorical\\\`",\\\`"filter\\\`":{\\\`"Version\\\`":2,\\\`"From\\\`":[{\\\`"Name\\\`":\\\`"g\\\`",\\\`"Entity\\\`":\\\`"Grupper\\\`",\\\`"Type\\\`":0}],\\\`"Where\\\`":[{\\\`"Condition\\\`":{\\\`"In\\\`":{\\\`"Expressions\\\`":[{\\\`"Column\\\`":{\\\`"Expression\\\`":{\\\`"SourceRef\\\`":{\\\`"Source\\\`":\\\`"g\\\`"}},\\\`"Property\\\`":\\\`"gruppeID\\\`"}}],\\\`"Values\\\`":[[{\\\`"Literal\\\`":{\\\`"Value\\\`":\\\`"${GruppeId}L\\\`"}}]]}}}]},\\\`"expression\\\`":{\\\`"Column\\\`":{\\\`"Expression\\\`":{\\\`"SourceRef\\\`":{\\\`"Entity\\\`":\\\`"Grupper\\\`"}},\\\`"Property\\\`":\\\`"gruppeID\\\`"}},\\\`"howCreated\\\`":1},{\\\`"name\\\`":\\\`"Filtere8220e51a93e3fafb1fa\\\`",\\\`"type\\\`":\\\`"RelativeDate\\\`",\\\`"filter\\\`":{\\\`"Version\\\`":2,\\\`"From\\\`":[{\\\`"Name\\\`":\\\`"d\\\`",\\\`"Entity\\\`":\\\`"dimTid\\\`",\\\`"Type\\\`":0}],\\\`"Where\\\`":[{\\\`"Condition\\\`":{\\\`"Between\\\`":{\\\`"Expression\\\`":{\\\`"Column\\\`":{\\\`"Expression\\\`":{\\\`"SourceRef\\\`":{\\\`"Source\\\`":\\\`"d\\\`"}},\\\`"Property\\\`":\\\`"Dato\\\`"}},\\\`"LowerBound\\\`":{\\\`"DateSpan\\\`":{\\\`"Expression\\\`":{\\\`"DateAdd\\\`":{\\\`"Expression\\\`":{\\\`"DateAdd\\\`":{\\\`"Expression\\\`":{\\\`"Now\\\`":{}},\\\`"Amount\\\`":1,\\\`"TimeUnit\\\`":0}},\\\`"Amount\\\`":-5,\\\`"TimeUnit\\\`":3}},\\\`"TimeUnit\\\`":0}},\\\`"UpperBound\\\`":{\\\`"DateSpan\\\`":{\\\`"Expression\\\`":{\\\`"Now\\\`":{}},\\\`"TimeUnit\\\`":0}}}}}]},\\\`"expression\\\`":{\\\`"Column\\\`":{\\\`"Expression\\\`":{\\\`"SourceRef\\\`":{\\\`"Entity\\\`":\\\`"dimTid\\\`"}},\\\`"Property\\\`":\\\`"Dato\\\`"}},\\\`"howCreated\\\`":1},{\\\`"name\\\`":\\\`"Filter142cb8ea0f02013e23f7\\\`",\\\`"type\\\`":\\\`"Categorical\\\`",\\\`"expression\\\`":{\\\`"Column\\\`":{\\\`"Expression\\\`":{\\\`"SourceRef\\\`":{\\\`"Entity\\\`":\\\`"Grupper\\\`"}},\\\`"Property\\\`":\\\`"Gruppe\\\`"}},\\\`"howCreated\\\`":1}]},\\\`"sections\\\`":{},\\\`"objects\\\`":{\\\`"merge\\\`":{\\\`"outspacePane\\\`":[{\\\`"properties\\\`":{\\\`"expanded\\\`":{\\\`"expr\\\`":{\\\`"Literal\\\`":{\\\`"Value\\\`":\\\`"true\\\`"}}}}}]}}}\`"}`"}}"
+
+
     $reportRequestId = ($result | ConvertFrom-Json).id
     $reportRequestId
 }
@@ -85,8 +88,15 @@ function Get-RequestedReport {
 
     Write-Host "Afventer resultat for $itemName " -NoNewLine
 
+    $sleep = $false
+
     do {
-        Start-Sleep -Seconds 2
+        if ($sleep) {
+            Start-Sleep -Seconds 3
+            Write-Host "." -NoNewLine
+        }
+        $sleep = $true
+
         $statusResult = Invoke-WebRequest -UseBasicParsing -Uri "https://wabi-europe-north-b-redirect.analysis.windows.net/export/reports/d4644347-1a7e-493a-ba7c-01ca397f8b70/asyncexports/${reportRequestId}/status" `
             -WebSession $session `
             -Headers @{
@@ -100,13 +110,18 @@ function Get-RequestedReport {
         }
         $statusDocument = ($statusResult.Content | ConvertFrom-Json)
         $status = $statusDocument.status
-        Write-Host "." -NoNewLine
     } while ($status -lt 3)
+
+    $fileName = "{0} {1}{2}" -f $statusDocument.reportName, $itemName, $statusDocument.resourceFileExtension
+    $fullPath = Join-Path $Destination $fileName.Replace("/", "_").Replace("\", "-")
+    if (-not $Force -and (Test-Path $fullPath)) {
+        Write-Host "Findes allerede $fileName"
+        return
+    }
 
     Write-Host " " -NoNewline
     $fileResponse = Invoke-WebRequest -UseBasicParsing -Uri "https://wabi-europe-north-b-redirect.analysis.windows.net/export/reports/d4644347-1a7e-493a-ba7c-01ca397f8b70/asyncexports/${reportRequestId}/file" `
         -WebSession $session `
-        -Proxy http://127.0.0.1:8888 `
         -Headers @{
         "authority"                  = "wabi-europe-north-b-redirect.analysis.windows.net"
         "accept"                     = "application/json, text/plain, */*"
@@ -118,8 +133,6 @@ function Get-RequestedReport {
         "referer"                    = "https://app.powerbi.com/"
         "x-powerbi-hostenv"          = "Power BI Web"
     }
-    $fileName = "{0} {1}{2}" -f $statusDocument.reportName, $itemName, $statusDocument.resourceFileExtension
-    $fullPath = Join-Path $Destination $fileName.Replace("/", "_").Replace("\", "-")
     [System.IO.File]::WriteAllBytes($fullPath, $fileResponse.Content)
     Write-Host "Gemt $fileName"
 }
@@ -195,6 +208,32 @@ If ($Distrikter -or $Grupper) {
     Write-Host "Eksporterer til ${Destination}"
 }
 
+function RetryWhenThrottled {
+    param(
+        [Parameter(Mandatory = $true, Position = 1)]
+        [scriptblock]$Script,
+        $ThrottleSleepSeconds = 30
+    )
+
+    do {
+        $retry = $false
+        try {
+            Invoke-Command $Script
+        }
+        catch {
+            if ($_.ErrorDetails.Message -like "*Request is blocked by the upstream service until*") {
+                $retry = $true
+                Write-Host "Throttling, waiting..."
+                Start-Sleep -Seconds $ThrottleSleepSeconds
+            }
+            else {
+                Write-Error $_
+                return
+            }
+        }
+    }while ($retry -eq $true) 
+}
+
 function ExecuteFile {
     param(
         $FilePath,
@@ -204,19 +243,26 @@ function ExecuteFile {
     Write-Host "Importerer $FilePath"
     $data = Get-Content $FilePath -Encoding UTF8 | ConvertFrom-Csv -Delimiter ";"
     $chunks = $data | Select-Object -Skip $Skip | Select-Chunk $ChunkSize
-    $chunks | ForEach-Object  {
+    $requested = $chunks | ForEach-Object {
         $chunk = $_
         $requested = $chunk | ForEach-Object {
-            Invoke-Command $ItemScript
+            $id = RetryWhenThrottled -Script $ItemScript
+            $id
         }
-        $requested | ForEach-Object {
-            $itm = $_
-            Get-RequestedReport -reportRequestId $itm.ReportId -itemName $itm.ItemName
-        }
-    }
-    
-    Write-Host ""
+        RetryWhenThrottled -Script {
+            $requested | ForEach-Object {
+                if ($_ -eq $Null) {
+                    continue
+                }
 
+                $itm = $_
+                Get-RequestedReport -reportRequestId $itm.ReportId -itemName $itm.ItemName
+            }
+        }
+        Start-Sleep -Seconds $ChunkSleepSeconds
+    }
+
+    Write-Host ""
 }
 
 If ($Distrikter) {
