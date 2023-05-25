@@ -1,4 +1,5 @@
 param(
+    [ValidateScript({ Test-Path $_ -PathType Container })]
     $Destination = (Resolve-Path .),
     [Parameter(Mandatory = $true)]
     $BearerToken,
@@ -16,6 +17,7 @@ param(
 )
 
 $ErrorActionPreference = "STOP"
+$Destination = Resolve-Path $Destination
 
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $session.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35"
